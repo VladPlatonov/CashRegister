@@ -1,0 +1,8 @@
+<%@ taglib uri="/WEB-INF/tlds/bodytag" prefix="t"%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<c:set value="${sessionScope.path.toString()}" var="path" scope="page" />
+<c:set value="${sessionScope.role.toString()}" var="user_role" scope="page" />
+<fmt:setLocale value="${requestScope.lang}"/>
+<fmt:setBundle basename="resources" />

@@ -1,0 +1,45 @@
+<nav class="main-navigation">
+    <ul class="nav-list">
+        <c:if test="${user_role == 'ADMIN' || user_role =='MERCHANT'|| user_role =='SENIOR_CASHIER'|| user_role =='CASHIER'}">
+            <li class="nav-list-item">
+                <a href="/admin" class="nav-link"><fmt:message key="menu.admin"/> </a>
+            </li>
+        </c:if>
+        <li class="nav-list-item">
+            <a href="/" class="nav-link"><fmt:message key="menu.home"/></a>
+        </li>
+        <c:if test="${user_role == 'ADMIN' || user_role == 'SENIOR_CASHIER' || user_role == 'CASHIER' || user_role == 'MERCHANT'|| user_role == 'USER'}">
+            <li class="nav-list-item">
+                <a href="/logout" class="nav-link"><fmt:message key="menu.logout"/></a>
+            </li>
+        </c:if>
+        <c:if test="${user_role != 'ADMIN' && user_role != 'SENIOR_CASHIER' && user_role != 'CASHIER' && user_role != 'MERCHANT' && user_role != 'USER'}">
+            <li class="nav-list-item">
+                <a href="/login" class="nav-link"><fmt:message key="menu.login"/></a>
+            </li>
+            <li class="nav-list-item">
+                <a href="/registration" class="nav-link"><fmt:message key="menu.signup"/></a>
+            </li>
+        </c:if>
+        <c:choose>
+            <c:when test="${requestScope.lang == 'en'}">
+                 <li class="nav-list-item">
+                <a href="javascript:setLang('ua')" class="nav-link"><span class="text-center text-muted"><fmt:message key="menu.ukraine"/></span></a>
+                 </li>
+            </c:when>
+            <c:otherwise>
+        <li class="nav-list-item">
+                <a href="javascript:setLang('en')" class="nav-link"><span class="text-center text-muted"><fmt:message key="menu.english"/></span></a>
+        </li>
+            </c:otherwise>
+        </c:choose>
+    </ul>
+</nav>
+<script>
+    function setLang(lang) {
+        document.cookie = "lang=" + lang + "; path=/; max-age=" + (10 * 365 * 24 * 60 * 60);
+        location.reload();
+    }
+</script>
+
+
