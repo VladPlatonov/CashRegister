@@ -1,0 +1,2 @@
+# CashRegister
+![](DBSchema.png)
