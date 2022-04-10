@@ -64,14 +64,14 @@ public class CreateInvoiceServlet extends HttpServlet {
             for (int i = 0; i < productCodes.length - 1; i += 2)
                 if (Integer.parseInt(productCodes[i + 1]) > 0)
                     products.put(productCodes[i], Integer.parseInt(productCodes[i + 1]));
-
-            if (products.isEmpty() || !invoiceService.createInvoice(products, System.currentTimeMillis(), user)) {
-                req.setAttribute("isValid", true);
-                req.setAttribute("noOfPages", noOfPages);
-                req.setAttribute("currentPage", page);
-                req.setAttribute("products", productService.findProductsUsingLimitAndOffset(page, recordsPerPage));
-                req.getRequestDispatcher("WEB-INF/admin/createInvoice.jsp").forward(req, resp);
-            }
+            if (products.isEmpty() || !invoiceService.createInvoice(products, System.currentTimeMillis(), user))
+                {
+                    req.setAttribute("isValid", true);
+                    req.setAttribute("noOfPages", noOfPages);
+                    req.setAttribute("currentPage", page);
+                    req.setAttribute("products", productService.findProductsUsingLimitAndOffset(page, recordsPerPage));
+                    req.getRequestDispatcher("WEB-INF/admin/createInvoice.jsp").forward(req, resp);
+                }
             }
             resp.sendRedirect("/invoices");
         }
