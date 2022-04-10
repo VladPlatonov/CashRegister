@@ -28,15 +28,18 @@ public class InvoiceDaoImpl implements InvoiceDao {
 
 
 
+    private Connection connection = ConnectionPool.getInstance().getConnection();
+
+
     @Override
     public void create(Invoice invoice) {
         log.info("Enter create:\n " + invoice);
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement insertStatement = connection.prepareStatement(SQL_CREATE_INVOICE)) {
+        try {
+            PreparedStatement insertStatement = connection.prepareStatement(SQL_CREATE_INVOICE);
             insertStatement.setLong(1,invoice.getInvoiceCode());
             insertStatement.setInt(2,invoice.getUserId());
             insertStatement.setInt(3,invoice.getStatus().ordinal());
-            insertStatement.setTimestamp(4, Timestamp.from(invoice.getDate().toInstant()) );
+            insertStatement.setTimestamp(4, Timestamp.valueOf(invoice.getDate()));
             insertStatement.setString(5,invoice.getInvoiceNotes());
             insertStatement.execute();
         } catch (SQLException e) {
@@ -50,8 +53,8 @@ public class InvoiceDaoImpl implements InvoiceDao {
     public Invoice getById(int id) {
         log.info("Enter getById invoiceId: "+id);
         Invoice invoice = null;
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement insertStatement = connection.prepareStatement(SQL_GET_BY_ID_INVOICE)) {
+        try {
+            PreparedStatement insertStatement = connection.prepareStatement(SQL_GET_BY_ID_INVOICE);
             insertStatement.setInt(1, id);
             try (ResultSet resultSet = insertStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -60,7 +63,7 @@ public class InvoiceDaoImpl implements InvoiceDao {
                     invoice.setInvoiceCode(resultSet.getLong("invoice_code"));
                     invoice.setUserId(resultSet.getInt("user_id"));
                     invoice.setStatus(InvoiceStatus.valueOf(resultSet.getString("status_description")));
-                    invoice.setDate(resultSet.getTimestamp("invoice_date"));
+                    invoice.setDate(resultSet.getTimestamp("invoice_date").toLocalDateTime());
                     invoice.setInvoiceNotes(resultSet.getString("invoice_notes"));
                 }
             }
@@ -77,8 +80,8 @@ public class InvoiceDaoImpl implements InvoiceDao {
     @Override
     public void deleteByCode(Long code) {
         log.info("Enter deleteByCode invoiceCode: " + code);
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(SQL_DELETE_BY_CODE)) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(SQL_DELETE_BY_CODE);
             statement.setLong(1, code);
             statement.execute();
         } catch (SQLException e) {
@@ -91,24 +94,16 @@ public class InvoiceDaoImpl implements InvoiceDao {
     @Override
     public void update(Invoice invoice) {
         log.info("Enter update invoice:\n " + invoice);
-        try (Connection connection = ConnectionPool.getInstance().getConnection()) {
-            try (PreparedStatement insertStatement = connection.prepareStatement(SQL_UPDATE_INVOICE)) {
-                insertStatement.setLong(1,invoice.getInvoiceCode());
-                insertStatement.setInt(2,invoice.getUserId());
-                insertStatement.setInt(3,invoice.getStatus().ordinal());
-                insertStatement.setTimestamp(4,Timestamp.from(invoice.getDate().toInstant()) );
-                insertStatement.setString(5,invoice.getInvoiceNotes());
-                insertStatement.setInt(6,invoice.getInvoiceId());
-                insertStatement.executeUpdate();
-                connection.setAutoCommit(false);
-                connection.commit();
-                connection.setAutoCommit(true);
+        try {
+            PreparedStatement insertStatement = connection.prepareStatement(SQL_UPDATE_INVOICE);
+            insertStatement.setLong(1,invoice.getInvoiceCode());
+            insertStatement.setInt(2,invoice.getUserId());
+            insertStatement.setInt(3,invoice.getStatus().ordinal());
+            insertStatement.setTimestamp(4,Timestamp.valueOf(invoice.getDate()));
+            insertStatement.setString(5,invoice.getInvoiceNotes());
+            insertStatement.setInt(6,invoice.getInvoiceId());
+            insertStatement.executeUpdate();
 
-            } catch (SQLException e) {
-                connection.rollback();
-                log.error("Can`t update invoice");
-                throw new DaoException("Can`t update invoice", e);
-            }
         }
         catch (SQLException e) {
             log.error("Can`t update invoice");
@@ -120,8 +115,8 @@ public class InvoiceDaoImpl implements InvoiceDao {
     @Override
     public void deleteById(int id) {
         log.info("Enter deleteById invoiceId: " + id);
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(SQL_DELETE_BY_ID)) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(SQL_DELETE_BY_ID);
             statement.setInt(1, id);
             statement.execute();
         } catch (SQLException e) {
@@ -135,16 +130,16 @@ public class InvoiceDaoImpl implements InvoiceDao {
     public List<Invoice> findAll() {
         log.info("Enter findAll invoices:");
         List<Invoice> invoices  = new ArrayList<>();
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
+        try {
              PreparedStatement statement = connection.prepareStatement(SQL_SELECT_ALL);
-             ResultSet resultSet = statement.executeQuery()) {
+             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Invoice invoice = new Invoice();
                 invoice.setInvoiceId(resultSet.getInt("invoice_id"));
                 invoice.setInvoiceCode(resultSet.getLong("invoice_code"));
                 invoice.setUserId(resultSet.getInt("user_id"));
                 invoice.setStatus(InvoiceStatus.valueOf(resultSet.getString("status_description")));
-                invoice.setDate(resultSet.getTimestamp("invoice_date"));
+                invoice.setDate(resultSet.getTimestamp("invoice_date").toLocalDateTime());
                 invoice.setInvoiceNotes(resultSet.getString("invoice_notes"));
                 invoices.add(invoice);
             }
@@ -161,8 +156,8 @@ public class InvoiceDaoImpl implements InvoiceDao {
         log.info("Enter findInvoicesUsingLimitAndOffset invoices: ");
         List<Invoice> invoices  = new ArrayList<>();
         int start = (currentPage) * recordsPerPage - recordsPerPage;
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_OFFSET)) {
+        try {
+             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_OFFSET);
             statement.setInt(1, recordsPerPage);
             statement.setInt(2, start);
             ResultSet resultSet = statement.executeQuery();
@@ -172,7 +167,7 @@ public class InvoiceDaoImpl implements InvoiceDao {
                 invoice.setInvoiceCode(resultSet.getLong("invoice_code"));
                 invoice.setUserId(resultSet.getInt("user_id"));
                 invoice.setStatus(InvoiceStatus.valueOf(resultSet.getString("status_description")));
-                invoice.setDate(resultSet.getTimestamp("invoice_date"));
+                invoice.setDate(resultSet.getTimestamp("invoice_date").toLocalDateTime());
                 invoice.setInvoiceNotes(resultSet.getString("invoice_notes"));
                 invoices.add(invoice);
             }
@@ -188,8 +183,8 @@ public class InvoiceDaoImpl implements InvoiceDao {
     public int getNumberOfRows() {
         log.info("Enter getNumberOfRows invoices:");
         int numOfRows = 0;
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_COUNT)) {
+        try {
+             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_COUNT);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 numOfRows = resultSet.getInt("count");

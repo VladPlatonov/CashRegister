@@ -9,7 +9,7 @@
     <div class="container-fluid" style="font-size: 20px">
         <div class="container">
             <h1><fmt:message key="profile.hello"/>, ${user.name} ${user.surname} </h1>
-            <a href="/invoices" class="nav-link"><h2>Back</h2></a>
+            <a href="/invoices" class="nav-link"><h2><fmt:message key="menu.back"/></h2></a>
             <h2><fmt:message key="admin.createInvoice"/></h2>
             <c:if test="${isValid==true}"> <h6 style="color: red"><fmt:message key="error.quantity"/></h6></c:if>
             <button type="submit"  form = "checked" class="btn btn-success"><fmt:message key="btn.create"/></button>
@@ -27,7 +27,6 @@
                     <th><fmt:message key="products.cost"/></th>
                     <th><fmt:message key="products.quantity"/></th>
                     <th class="text-center"><fmt:message key="payments.setQuantity"/></th>
-                    <th class="text-center"><fmt:message key="payments.mark"/></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -38,10 +37,8 @@
                         <td><c:out value="${product.description}"/></td>
                         <td><c:out value="${product.cost}"/></td>
                         <td><c:out value="${product.quantity}"/></td>
-                        <td ><input class="form-control form-control-sm" size="1" type="number" min = "0" max="${product.quantity}  " name="setQuantity${product.code}" value="0"/></td>
-                        <td align="center">
-                            <input class="form-check-input" type="checkbox" name = "products" value="${product.code}" >
-                        </td>
+                        <td><input class="form-check-input" hidden name = "setQuantity" value="${product.code}" >
+                            <input class="form-control form-control-sm" size="1" type="number" min = "0" max="${product.quantity}  " name="setQuantity" value="0"/></td>
                     </tr>
                 </c:forEach>
                 <table border="1" cellpadding="5" cellspacing="5">

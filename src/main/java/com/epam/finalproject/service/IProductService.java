@@ -13,7 +13,7 @@ public interface IProductService {
     List<Product> findAll();
     void update(Product product);
     void deleteById(int id);
-    void updateQuantity(String  code, Double quantity);
+    void updateQuantity(String  code, Integer quantity);
     List<Product> findProductsUsingLimitAndOffset(int currentPage, int recordsPerPage);
     int getNumberOfRows();
     boolean isNotNull(Product product);

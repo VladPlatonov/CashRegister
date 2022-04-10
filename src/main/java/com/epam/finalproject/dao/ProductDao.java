@@ -10,7 +10,7 @@ public interface ProductDao {
     Product getByCode(String code);
     void update(Product product);
     void deleteById(int id);
-    void updateQuantity(String code,Double quantity);
+    void updateQuantity(String code,Integer quantity);
     List<Product> findAll();
     List<Product> findProductsUsingLimitAndOffset(int currentPage, int numOfRecords);
     int getNumberOfRows();

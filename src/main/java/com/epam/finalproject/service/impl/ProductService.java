@@ -1,16 +1,17 @@
 package com.epam.finalproject.service.impl;
 
 import com.epam.finalproject.context.AppContext;
+import com.epam.finalproject.dao.ConnectionPool;
 import com.epam.finalproject.dao.ProductDao;
 import com.epam.finalproject.model.Product;
-import com.epam.finalproject.service.IOrderService;
 import com.epam.finalproject.service.IProductService;
 
+import java.sql.Connection;
 import java.util.List;
 
 public class ProductService implements IProductService {
-    IOrderService orderService = AppContext.getInstance().getOrderService();
     ProductDao productDaoImpl = AppContext.getInstance().getProductDao();
+    private Connection connection = ConnectionPool.getInstance().getConnection();
 
 
     public boolean isValidProductCode(String code){
@@ -18,10 +19,6 @@ public class ProductService implements IProductService {
     }
 
     public void deleteProduct(Product product){
-        orderService.findAllByProductCode(product.getCode())
-                .forEach(p->
-                    orderService.deleteById(p.getOrderId()));
-
         productDaoImpl.deleteById(product.getId());
     }
 
@@ -56,7 +53,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public void updateQuantity(String code, Double quantity) {
+    public void updateQuantity(String code, Integer quantity) {
         productDaoImpl.updateQuantity(code,quantity);
     }
 

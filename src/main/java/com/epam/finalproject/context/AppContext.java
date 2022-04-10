@@ -1,6 +1,9 @@
 package com.epam.finalproject.context;
 
-import com.epam.finalproject.dao.*;
+import com.epam.finalproject.dao.InvoiceDao;
+import com.epam.finalproject.dao.OrderDao;
+import com.epam.finalproject.dao.ProductDao;
+import com.epam.finalproject.dao.UserDao;
 import com.epam.finalproject.dao.impl.InvoiceDaoImpl;
 import com.epam.finalproject.dao.impl.OrderDaoImpl;
 import com.epam.finalproject.dao.impl.ProductDaoImpl;
@@ -28,30 +31,21 @@ public class AppContext {
      * Dao
      */
 
-    private static final InvoiceDao invoiceDao;
-    private static final OrderDao orderDao;
-    private static final ProductDao productDao;
-    private static final UserDao userDao;
+    private InvoiceDao invoiceDao;
+    private OrderDao orderDao;
+    private ProductDao productDao;
+    private UserDao userDao;
+
+
 
     /**
      * Service
      */
-    private static final IOrderService orderService;
-    private static final IProductService productService;
-    private static final IInvoiceService invoiceService;
-    private static final IUserService userService;
+    private   IOrderService orderService;
+    private   IProductService productService;
+    private   IInvoiceService invoiceService;
+    private   IUserService userService;
 
-
-    static{
-        invoiceDao = new InvoiceDaoImpl();
-        orderDao = new OrderDaoImpl();
-        productDao = new ProductDaoImpl();
-        userDao = new UserDaoImpl();
-        orderService = new OrderService();
-        productService = new ProductService();
-        invoiceService = new InvoiceService();
-        userService = new UserService();
-    }
 
     /**
      * Double-Checked Locking
@@ -62,6 +56,10 @@ public class AppContext {
             synchronized (AppContext.class){
                 if(instance ==null)
                     instance = new AppContext();
+                    instance.getInvoiceService();
+                    instance.getOrderService();
+                    instance.getProductService();
+                    instance.getUserService();
             }
         return instance;
     }
@@ -70,32 +68,40 @@ public class AppContext {
 
     }
 
-    public static UserDao getUserDao(){
+    public  UserDao getUserDao(){
+        userDao = new UserDaoImpl();
         return userDao;
     }
 
-    public static OrderDao getOrderDao(){
+    public  OrderDao getOrderDao(){
+        orderDao = new OrderDaoImpl();
         return orderDao;
     }
 
-    public static ProductDao getProductDao(){
+    public  ProductDao getProductDao(){
+        productDao = new ProductDaoImpl();
         return productDao;
     }
 
-    public static InvoiceDao getInvoiceDao(){
+    public InvoiceDao getInvoiceDao(){
+        invoiceDao = new InvoiceDaoImpl();
         return invoiceDao;
     }
 
-    public static IUserService getUserService(){
+    public  IUserService getUserService(){
+        userService = new UserService();
         return userService;
     }
-    public static IOrderService getOrderService(){
+    public  IOrderService getOrderService(){
+        orderService = new OrderService();
         return orderService;
     }
-    public static IProductService getProductService(){
+    public  IProductService getProductService(){
+        productService = new ProductService();
         return productService;
     }
-    public static IInvoiceService getInvoiceService(){
+    public  IInvoiceService getInvoiceService(){
+        invoiceService = new InvoiceService();
         return invoiceService;
     }
 }

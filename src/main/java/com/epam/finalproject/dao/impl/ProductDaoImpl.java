@@ -30,16 +30,20 @@ public class ProductDaoImpl implements ProductDao {
     private static final String SQL_SELECT_OFFSET = "SELECT * FROM products ORDER BY product_id LIMIT ? OFFSET ?";
     private static final String SQL_SELECT_COUNT = "SELECT COUNT(product_id) AS count FROM products";
     private static final Logger log = Logger.getLogger(ProductDaoImpl.class);
+
+    private Connection connection = ConnectionPool.getInstance().getConnection();
+
+
     @Override
     public void create(Product product) {
         log.info("Enter create product: " + product);
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement insertStatement = connection.prepareStatement(SQL_CREATE_PRODUCT)) {
+        try {
+             PreparedStatement insertStatement = connection.prepareStatement(SQL_CREATE_PRODUCT);
             insertStatement.setString(1, product.getCode());
             insertStatement.setString(2, product.getName());
             insertStatement.setString(3, product.getDescription());
-            insertStatement.setDouble(4, product.getCost());
-            insertStatement.setDouble(5, product.getQuantity());
+            insertStatement.setInt(4, product.getCost());
+            insertStatement.setInt(5, product.getQuantity());
             insertStatement.execute();
         } catch (SQLException e) {
             log.error("Can`t create product");
@@ -52,20 +56,19 @@ public class ProductDaoImpl implements ProductDao {
     public Product getById(int id) {
         log.info("Enter getById productId:" + id);
         Product product = null;
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement insertStatement = connection.prepareStatement(SQL_SELECT_PRODUCT_BY_ID)) {
+        try {
+            PreparedStatement insertStatement = connection.prepareStatement(SQL_SELECT_PRODUCT_BY_ID);
             insertStatement.setInt(1, id);
-            try (ResultSet resultSet = insertStatement.executeQuery()) {
+            ResultSet resultSet = insertStatement.executeQuery();
                 while (resultSet.next()) {
                     product = new Product();
                     product.setId(resultSet.getInt("product_id"));
                     product.setCode(resultSet.getString("product_code"));
                     product.setName(resultSet.getString("product_name"));
                     product.setDescription(resultSet.getString("product_description"));
-                    product.setCost(resultSet.getDouble("product_cost"));
-                    product.setQuantity(resultSet.getDouble("product_quantity"));
+                    product.setCost(resultSet.getInt("product_cost"));
+                    product.setQuantity(resultSet.getInt("product_quantity"));
                 }
-            }
 
         } catch (SQLException e) {
             log.error("Can`t get product");
@@ -79,19 +82,18 @@ public class ProductDaoImpl implements ProductDao {
     public Product getByCode(String code) {
         log.info("Enter getByCode product: "+code);
         Product product = null;
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement insertStatement = connection.prepareStatement(SQL_SELECT_BY_CODE)) {
+        try {
+            PreparedStatement insertStatement = connection.prepareStatement(SQL_SELECT_BY_CODE);
             insertStatement.setString(1, code);
-            try (ResultSet resultSet = insertStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    product = new Product();
-                    product.setId(resultSet.getInt("product_id"));
-                    product.setCode(resultSet.getString("product_code"));
-                    product.setName(resultSet.getString("product_name"));
-                    product.setDescription(resultSet.getString("product_description"));
-                    product.setCost(resultSet.getDouble("product_cost"));
-                    product.setQuantity(resultSet.getDouble("product_quantity"));
-                }
+            ResultSet resultSet = insertStatement.executeQuery();
+            while (resultSet.next()) {
+                product = new Product();
+                product.setId(resultSet.getInt("product_id"));
+                product.setCode(resultSet.getString("product_code"));
+                product.setName(resultSet.getString("product_name"));
+                product.setDescription(resultSet.getString("product_description"));
+                product.setCost(resultSet.getInt("product_cost"));
+                product.setQuantity(resultSet.getInt("product_quantity"));
             }
 
         } catch (SQLException e) {
@@ -106,23 +108,16 @@ public class ProductDaoImpl implements ProductDao {
     @Override
     public void update(Product product) {
         log.info("Enter update product: \n"+product);
-        try (Connection connection = ConnectionPool.getInstance().getConnection()) {
-            try (PreparedStatement insertStatement = connection.prepareStatement(SQL_UPDATE_PRODUCT)) {
-                insertStatement.setString(1, product.getCode());
-                insertStatement.setString(2, product.getName());
-                insertStatement.setString(3, product.getDescription());
-                insertStatement.setDouble(4, product.getCost());
-                insertStatement.setDouble(5, product.getQuantity());
-                insertStatement.setInt(6, product.getId());
-                insertStatement.executeUpdate();
-                connection.setAutoCommit(false);
-                connection.commit();
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                connection.rollback();
-                log.error("Can`t update product");
-                throw new DaoException("Can`t update product", e);
-            }
+        try {
+            PreparedStatement insertStatement = connection.prepareStatement(SQL_UPDATE_PRODUCT);
+            insertStatement.setString(1, product.getCode());
+            insertStatement.setString(2, product.getName());
+            insertStatement.setString(3, product.getDescription());
+            insertStatement.setInt(4, product.getCost());
+            insertStatement.setInt(5, product.getQuantity());
+            insertStatement.setInt(6, product.getId());
+            insertStatement.executeUpdate();
+
         } catch (SQLException e) {
             log.error("Can`t update product");
             throw new DaoException("Can`t update product", e);
@@ -133,8 +128,8 @@ public class ProductDaoImpl implements ProductDao {
     @Override
     public void deleteById(int id) {
         log.info("Enter deleteById productId: " + id);
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(SQL_DELETE_BY_ID)) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(SQL_DELETE_BY_ID);
             statement.setInt(1, id);
             statement.execute();
         } catch (SQLException e) {
@@ -145,21 +140,13 @@ public class ProductDaoImpl implements ProductDao {
     }
 
     @Override
-    public void updateQuantity(String  code, Double quantity) {
+    public void updateQuantity(String  code, Integer quantity) {
         log.info("Enter updateQuantity productCode:" + code);
-        try (Connection connection =ConnectionPool.getInstance().getConnection()) {
-            try (PreparedStatement insertStatement = connection.prepareStatement(SQL_UPDATE_PRODUCT_QUANTITY)) {
-                insertStatement.setDouble(1,quantity);
+        try {
+            PreparedStatement insertStatement = connection.prepareStatement(SQL_UPDATE_PRODUCT_QUANTITY);
+                insertStatement.setInt(1,quantity);
                 insertStatement.setString(2,code);
                 insertStatement.executeUpdate();
-                connection.setAutoCommit(false);
-                connection.commit();
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                connection.rollback();
-                log.error("Can`t update product");
-                throw new DaoException("Can`t update product", e);
-            }
         } catch (SQLException e) {
             log.error("Can`t update product");
             throw new DaoException("Can`t update product", e);
@@ -172,17 +159,17 @@ public class ProductDaoImpl implements ProductDao {
     public List<Product> findAll() {
         log.info("Enter findAll products:");
         List<Product> products  = new ArrayList<>();
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
+        try {
              PreparedStatement statement = connection.prepareStatement(SQL_SELECT_ALL_PRODUCT);
-             ResultSet resultSet = statement.executeQuery()) {
+             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Product product = new Product();
                 product.setId(resultSet.getInt("product_id"));
                 product.setCode(resultSet.getString("product_code"));
                 product.setName(resultSet.getString("product_name"));
                 product.setDescription(resultSet.getString("product_description"));
-                product.setCost(resultSet.getDouble("product_cost"));
-                product.setQuantity(resultSet.getDouble("product_quantity"));
+                product.setCost(resultSet.getInt("product_cost"));
+                product.setQuantity(resultSet.getInt("product_quantity"));
                 products.add(product);
             }
         } catch (SQLException e) {
@@ -198,8 +185,9 @@ public class ProductDaoImpl implements ProductDao {
         log.info("Enter findProductsUsingLimitAndOffset products:");
         List<Product> products  = new ArrayList<>();
         int start = (currentPage) * recordsPerPage - recordsPerPage;
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_OFFSET)) {
+        try {
+
+            PreparedStatement statement = connection.prepareStatement(SQL_SELECT_OFFSET);
             statement.setInt(1, recordsPerPage);
             statement.setInt(2, start);
             ResultSet resultSet = statement.executeQuery();
@@ -209,8 +197,8 @@ public class ProductDaoImpl implements ProductDao {
                 product.setCode(resultSet.getString("product_code"));
                 product.setName(resultSet.getString("product_name"));
                 product.setDescription(resultSet.getString("product_description"));
-                product.setCost(resultSet.getDouble("product_cost"));
-                product.setQuantity(resultSet.getDouble("product_quantity"));
+                product.setCost(resultSet.getInt("product_cost"));
+                product.setQuantity(resultSet.getInt("product_quantity"));
                 products.add(product);
             }
         } catch (SQLException e) {
@@ -225,8 +213,8 @@ public class ProductDaoImpl implements ProductDao {
     public int getNumberOfRows() {
         log.info("Enter getNumberOfRows products: ");
         int numOfRows = 0;
-        try (Connection connection = ConnectionPool.getInstance().getConnection();
-             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_COUNT)) {
+        try {
+             PreparedStatement statement = connection.prepareStatement(SQL_SELECT_COUNT);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 numOfRows = resultSet.getInt("count");

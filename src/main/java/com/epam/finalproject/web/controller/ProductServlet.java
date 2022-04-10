@@ -50,43 +50,43 @@ public class ProductServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         String [] productAction = req.getParameter("productAction").split("!");
-        if(productAction[1].equals("deleteProduct"))
-            productService.deleteProduct(productService.findById(Integer.parseInt(productAction[0])));
-        if(productAction[1].equals("addProduct")&&productAction[0].equals("add"))
-            req.getRequestDispatcher("WEB-INF/admin/addProduct.jsp").forward(req, resp);
-        if(productAction[1].equals("addProduct")&&productAction[0].equals("new")){
-            Product product = new Product();
-            product.setQuantity(Double.parseDouble(req.getParameter("quantity")));
-            product.setCost(Double.parseDouble(req.getParameter("cost")));
-            product.setName(req.getParameter("name"));
-            product.setCode(req.getParameter("code"));
-            product.setDescription(req.getParameter("description"));
-            if(!productService.isNotNull(product)) {
-                req.setAttribute("isValid", "null");
+        switch (productAction[1]){
+            case "deleteProduct":  productService.deleteProduct(productService.findById(Integer.parseInt(productAction[0]))); break;
+            case "add": req.getRequestDispatcher("WEB-INF/admin/addProduct.jsp").forward(req, resp);
+            case "new": {
+                Product product = new Product();
+                product.setQuantity(Integer.parseInt(req.getParameter("quantity")));
+                product.setCost(Integer.parseInt(req.getParameter("cost")));
+                product.setName(req.getParameter("name"));
+                product.setCode(req.getParameter("code"));
+                product.setDescription(req.getParameter("description"));
+                if(!productService.isNotNull(product)) {
+                    req.setAttribute("isValid", "null");
+                    req.setAttribute("product", product);
+                    req.getRequestDispatcher("WEB-INF/admin/addProduct.jsp").forward(req, resp);
+                }
+                if(productService.isValidProductCode(product.getCode()))
+                    productService.create(product);
+                else{
+                    req.setAttribute("isValid","true");
+                    req.setAttribute("product", product);
+                    req.getRequestDispatcher("WEB-INF/admin/addProduct.jsp").forward(req,resp);
+                }
+            }break;
+            case "editProduct":{
+                Product product = productService.findById(Integer.parseInt(productAction[0]));
                 req.setAttribute("product", product);
-                req.getRequestDispatcher("WEB-INF/admin/addProduct.jsp").forward(req, resp);
-            }
-            if(productService.isValidProductCode(product.getCode()))
-                productService.create(product);
-            else{
-                req.setAttribute("isValid","true");
-                req.setAttribute("product", product);
-                req.getRequestDispatcher("WEB-INF/admin/addProduct.jsp").forward(req,resp);
-            }
-        }
-        if(productAction[1].equals("editProduct")&&!productAction[0].equals("update")){
-            Product product = productService.findById(Integer.parseInt(productAction[0]));
-            req.setAttribute("product", product);
-            req.getRequestDispatcher("WEB-INF/admin/editProduct.jsp").forward(req, resp);
-        }
-        if(productAction[1].equals("editProduct")&&productAction[0].equals("update")){
-            Product product = productService.findById(Integer.parseInt(req.getParameter("id")));
-            product.setQuantity(Double.parseDouble(req.getParameter("quantity")));
-            product.setCost(Double.parseDouble(req.getParameter("cost")));
-            product.setName(req.getParameter("name"));
-            product.setCode(req.getParameter("code"));
-            product.setDescription(req.getParameter("description"));
-            productService.update(product);
+                req.getRequestDispatcher("WEB-INF/admin/editProduct.jsp").forward(req, resp);
+            } break;
+            case "editProduct_update": {
+                Product product = productService.findById(Integer.parseInt(req.getParameter("id")));
+                product.setQuantity(Integer.parseInt(req.getParameter("quantity")));
+                product.setCost(Integer.parseInt(req.getParameter("cost")));
+                product.setName(req.getParameter("name"));
+                product.setCode(req.getParameter("code"));
+                product.setDescription(req.getParameter("description"));
+                productService.update(product);
+            }break;
         }
         resp.sendRedirect("/products");
     }

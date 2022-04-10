@@ -1,22 +1,29 @@
 package com.epam.finalproject.service.impl;
 
 import com.epam.finalproject.context.AppContext;
+import com.epam.finalproject.dao.ConnectionPool;
 import com.epam.finalproject.dao.InvoiceDao;
+import com.epam.finalproject.dao.OrderDao;
+import com.epam.finalproject.dao.ProductDao;
+import com.epam.finalproject.dao.exception.ServiceException;
 import com.epam.finalproject.model.*;
 import com.epam.finalproject.service.IInvoiceService;
-import com.epam.finalproject.service.IOrderService;
-import com.epam.finalproject.service.IProductService;
 
-import java.sql.Timestamp;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 
-public class InvoiceService implements IInvoiceService {
+public class InvoiceService implements IInvoiceService  {
+
+    private Connection connection = ConnectionPool.getInstance().getConnection();
 
     InvoiceDao invoiceDaoImpl = AppContext.getInstance().getInvoiceDao();
-    IProductService productService = AppContext.getInstance().getProductService();
-    IOrderService orderService = AppContext.getInstance().getOrderService();
+    ProductDao productDaoImpl = AppContext.getInstance().getProductDao();
+    OrderDao orderDaoImpl = AppContext.getInstance().getOrderDao();
+
 
 
     /**
@@ -27,52 +34,46 @@ public class InvoiceService implements IInvoiceService {
      * @return result of execution
      */
     @Override
-    public boolean createInvoice(Map<String,Double> products, Long InvoiceCode, User user) {
-        Timestamp stamp = new Timestamp(System.currentTimeMillis());
-        Invoice invoice = new Invoice();
+    public boolean createInvoice(Map<String,Integer> products, Long InvoiceCode, User user){
         boolean isCreate = false;
-        invoice.setInvoiceCode(InvoiceCode);
-        invoice.setUserId(user.getId());
-        invoice.setStatus(InvoiceStatus.CREATED);
-        invoice.setInvoiceNotes("CREATED BY:" + user.getUserRole().toString());
-        invoice.setDate(stamp);
-        invoiceDaoImpl.create(invoice);
-        for (Map.Entry<String, Double> product: products.entrySet()) {
-            Order order = new Order();
-            order.setQuantity(product.getValue());
-            if(product.getValue()==0) {
-                isCreate = false;
-                invoiceDaoImpl.deleteByCode(invoice.getInvoiceCode());
-                break;
+        try {
+            connection.setAutoCommit(false);
+            Invoice invoice = new Invoice();
+            invoice.setInvoiceCode(InvoiceCode);
+            invoice.setUserId(user.getId());
+            invoice.setStatus(InvoiceStatus.CREATED);
+            invoice.setInvoiceNotes("CREATED BY:" + user.getUserRole().toString());
+            invoice.setDate(LocalDateTime.now());
+            invoiceDaoImpl.create(invoice);
+            for (Map.Entry<String, Integer> selected: products.entrySet()) {
+                Order order = new Order();
+                Product product = productDaoImpl.getByCode(selected.getKey());
+                order.setQuantity(selected.getValue());
+                if(selected.getValue() == null) {
+                    isCreate = false;
+                    invoiceDaoImpl.deleteByCode(invoice.getInvoiceCode());
+                    break;
+                }
+                else if(product.getQuantity()>=order.getQuantity()) {
+                    order.setInvoiceCode(InvoiceCode);
+                    order.setProductCode(selected.getKey());
+                    productDaoImpl.updateQuantity(product.getCode(),product.getQuantity()- selected.getValue());
+                    order.setOrderValue(selected.getValue()*product.getCost());
+                    orderDaoImpl.create(order);
+                    isCreate=true;
+                }
             }
-            else if(productService.findByCode(product.getKey()).getQuantity()>order.getQuantity()) {
-                order.setInvoiceCode(InvoiceCode);
-                order.setProductCode(product.getKey());
-                updateQuantity(product.getKey(),product.getValue());
-                order.setOrderValue(orderService.calculateCost(product.getKey(), product.getValue()));
-                orderService.create(order);
-                isCreate=true;
-            }
+            connection.commit();
+        } catch (SQLException e) {
+            throw  new ServiceException("can't create invoice");
         }
         return isCreate;
-    }
 
-
-    /**
-     * After update order
-     * Update quantity product in warehouse
-     * @param code product code
-     * @param quantity quantity of products to change
-     */
-    private void updateQuantity(String code,Double quantity){
-        Product product = productService.findByCode(code);
-        Double tempQuantity = product.getQuantity()-quantity;
-        productService.updateQuantity(code,tempQuantity);
     }
 
 
     @Override
-    public void finishInvoice(Invoice invoice) {
+    public void finishInvoice(Invoice invoice)  {
         invoice.setStatus(InvoiceStatus.FINISHED);
         invoiceDaoImpl.update(invoice);
     }
@@ -83,24 +84,28 @@ public class InvoiceService implements IInvoiceService {
      * @param invoice
      */
     @Override
-    public void cancelInvoice(Invoice invoice) {
-        orderService.findAllByInvoiceCode(invoice.getInvoiceCode())
+    public void cancelInvoice(Invoice invoice){
+        try {
+            connection.setAutoCommit(false);
+        orderDaoImpl.findAllByInvoiceCode(invoice.getInvoiceCode())
                 .forEach(p->{
-                   Product product = productService.findByCode(p.getProductCode());
+                   Product product = productDaoImpl.getByCode(p.getProductCode());
                    product.setQuantity(product.getQuantity()+p.getQuantity());
-                   productService.update(product);
+                   productDaoImpl.update(product);
                 });
         invoice.setStatus(InvoiceStatus.CANCELLED);
         invoiceDaoImpl.update(invoice);
+        connection.commit();
+        } catch (SQLException e) {
+            throw  new ServiceException("can't cancel invoice");
+        }
     }
 
     /**
      * Delete invoice and orders
      * @param invoice
      */
-    public void deleteInvoice(Invoice invoice) {
-        orderService.findAllByInvoiceCode(invoice.getInvoiceCode()).forEach(p->
-            orderService.deleteById(p.getOrderId()));
+    public void deleteInvoice(Invoice invoice)  {
         invoiceDaoImpl.deleteById(invoice.getInvoiceId());
     }
 

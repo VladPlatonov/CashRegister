@@ -1,14 +1,23 @@
 package com.epam.finalproject.service.impl;
 
 import com.epam.finalproject.context.AppContext;
+import com.epam.finalproject.dao.ConnectionPool;
 import com.epam.finalproject.dao.OrderDao;
 import com.epam.finalproject.dao.ProductDao;
+import com.epam.finalproject.dao.exception.ServiceException;
 import com.epam.finalproject.model.Order;
+import com.epam.finalproject.model.Product;
 import com.epam.finalproject.service.IOrderService;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 public class OrderService implements IOrderService {
+
+    private Connection connection = ConnectionPool.getInstance().getConnection();
+
+
     OrderDao orderDaoImpl = AppContext.getInstance().getOrderDao();
     ProductDao productDaoImpl = AppContext.getInstance().getProductDao();
 
@@ -20,49 +29,61 @@ public class OrderService implements IOrderService {
      * @param quantity
      */
     @Override
-    public void updateQuantityOrder(Order order, Double quantity){
-        Double tempQuantity;
-        if(quantity > order.getQuantity()) {
-           tempQuantity = quantity - order.getQuantity();
-           productDaoImpl.updateQuantity(order.getProductCode(),
-                   productDaoImpl.getByCode(order.getProductCode()).getQuantity()-tempQuantity);
+    public boolean updateQuantityOrder(Order order, Integer quantity){
+        boolean isCreate =false;
+        try {
+            connection.setAutoCommit(false);
+            Product product = productDaoImpl.getByCode(order.getProductCode());
+            if(product.getQuantity()>=quantity -order.getQuantity()) {
+                order.setQuantity(quantity);
+                productDaoImpl.updateQuantity(order.getProductCode(),product
+                        .getQuantity()-quantity + order.getQuantity());
+                order.setOrderValue(order.getQuantity()*product.getCost());
+                orderDaoImpl.update(order);
+                isCreate=true;
+            }
+            connection.commit();
+        } catch (SQLException e) {
+            throw  new ServiceException("can't update Order");
         }
-        else {
-            tempQuantity = order.getQuantity() -quantity;
-            productDaoImpl.updateQuantity(order.getProductCode(),
-                    productDaoImpl.getByCode(order.getProductCode()).getQuantity()+tempQuantity);
-        }
-        order.setQuantity(quantity);
-        order.setOrderValue(calculateCost(order.getProductCode(),quantity));
-        orderDaoImpl.update(order);
-
-
+    return isCreate;
     }
-    public Double totalInvoice(Long code){
+    public Integer totalInvoice(Long code){
     return orderDaoImpl.findAllByInvoiceCode(code).stream()
                         .map(Order::getOrderValue)
-                        .mapToDouble(Double::doubleValue).sum();
-    }
-    @Override
-    public Double calculateCost(String code,Double quantity){
-        return quantity*productDaoImpl.getByCode(code).getCost();
+                        .mapToInt(Integer::intValue).sum();
     }
 
     @Override
     public void deleteOrder(String orderId){
-        Order order = orderDaoImpl.getById(Integer.parseInt(orderId));
-        Double updateQuantity = order.getQuantity() + productDaoImpl.getByCode(order.getProductCode()).getQuantity();
-        productDaoImpl.updateQuantity(order.getProductCode(),updateQuantity);
-        orderDaoImpl.deleteById(order.getOrderId());
-    }
-    @Override
-    public boolean isValidQuantity(Double quantity,String productCode){
-        return productDaoImpl.getByCode(productCode).getQuantity()>=quantity;
+        try {
+            connection.setAutoCommit(false);
+            Order order = orderDaoImpl.getById(Integer.parseInt(orderId));
+            productDaoImpl.updateQuantity(order.getProductCode(),order.getQuantity() + productDaoImpl.getByCode(order.getProductCode()).getQuantity());
+            orderDaoImpl.deleteById(order.getOrderId());
+            connection.commit();
+        } catch (SQLException e) {
+            throw  new ServiceException("can't  delete Order");
+        }
     }
 
     @Override
-    public void create(Order order) {
-        orderDaoImpl.create(order);
+    public boolean create(Order order) {
+        boolean isCreate = false;
+        try {
+            connection.setAutoCommit(false);
+            Product product = productDaoImpl.getByCode(order.getProductCode());
+            productDaoImpl.updateQuantity(order.getProductCode(),product.getQuantity()- order.getQuantity());
+            order.setOrderValue(order.getQuantity()*product.getCost());
+            if(product.getQuantity()>=order.getQuantity()) {
+                orderDaoImpl.create(order);
+                isCreate=true;
+            }
+            connection.commit();
+        } catch (SQLException e) {
+            throw  new ServiceException("can't  create Order");
+        }
+        return isCreate;
     }
 
     @Override
@@ -78,16 +99,6 @@ public class OrderService implements IOrderService {
     @Override
     public void deleteById(int id) {
         orderDaoImpl.deleteById(id);
-    }
-
-    @Override
-    public List<Order> findAllByInvoiceCode(Long invoiceCode) {
-        return orderDaoImpl.findAllByInvoiceCode(invoiceCode);
-    }
-
-    @Override
-    public List<Order> findAllByProductCode(String productCode) {
-        return orderDaoImpl.findAllByProductCode(productCode);
     }
 
     @Override

@@ -6,3 +6,4 @@
 <c:set value="${sessionScope.role.toString()}" var="user_role" scope="page" />
 <fmt:setLocale value="${requestScope.lang}"/>
 <fmt:setBundle basename="resources" />
+<! DOCTYPE html>

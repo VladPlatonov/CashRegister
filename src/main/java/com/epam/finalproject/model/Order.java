@@ -5,8 +5,8 @@ public class Order {
     private Integer orderId;
     private Long invoiceCode;
     private String productCode;
-    private Double quantity;
-    private Double orderValue;
+    private Integer quantity;
+    private Integer orderValue;
 
     public Integer getOrderId() {
         return orderId;
@@ -20,11 +20,11 @@ public class Order {
         return productCode;
     }
 
-    public Double getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public Double getOrderValue() {
+    public Integer getOrderValue() {
         return orderValue;
     }
 
@@ -40,11 +40,11 @@ public class Order {
         this.productCode = productCode;
     }
 
-    public void setQuantity(Double quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
-    public void setOrderValue(Double orderValue) {
+    public void setOrderValue(Integer orderValue) {
         this.orderValue = orderValue;
     }
 

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface IInvoiceService {
-    boolean createInvoice(Map<String,Double> products, Long orderCode, User user);
+    boolean createInvoice(Map<String,Integer> products, Long orderCode, User user);
     void finishInvoice(Invoice invoice);
     void cancelInvoice(Invoice invoice);
     void deleteInvoice(Invoice invoice);

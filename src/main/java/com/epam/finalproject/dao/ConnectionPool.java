@@ -13,6 +13,7 @@ public class ConnectionPool {
 
     private static final Logger log = Logger.getLogger(ConnectionPool.class);
     private static volatile ConnectionPool instance;
+    private Connection connection;
     private static  final Properties properties = new Properties();
     private static String URL;
     private static String CLASS_NAME;
@@ -39,25 +40,63 @@ public class ConnectionPool {
      * Double-Checked Locking
      */
 
-    public static ConnectionPool getInstance(){
+    public static   ConnectionPool getInstance(){
         if (instance==null)
             synchronized (ConnectionPool.class){
             if(instance ==null)
                 instance = new ConnectionPool();
+                instance.getConnection();
             }
         return instance;
     }
 
 
-    public static Connection getConnection() {
+    public Connection getConnection() {
         try {
             Class.forName(CLASS_NAME);
-            return DriverManager.getConnection(URL, USER, PASS);
+            connection = DriverManager.getConnection(URL, USER, PASS);
         } catch (SQLException e) {
             throw new DaoException("Cant connect to database", e);
         } catch (ClassNotFoundException e) {
             throw new DaoException("Driver not found", e);
         }
+        return connection;
     }
+
+    public void closeConnection(){
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            throw new DaoException("Cant connect to database", e);
+        }
+    }
+
+    public void beginTransaction() throws SQLException {
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new DaoException("Cant connect to database", e);
+        }
+    }
+
+    public void commitTransaction() throws SQLException {
+        try {
+            connection.commit();
+            connection.close();
+        } catch (SQLException e) {
+            throw new DaoException("Cant connect to database", e);
+        }
+    }
+
+    public void rollbackTransaction() throws SQLException {
+        try {
+            connection.rollback();
+            connection.close();
+        } catch (SQLException e) {
+            throw new DaoException("Cant connect to database", e);
+        }
+    }
+
 }
 

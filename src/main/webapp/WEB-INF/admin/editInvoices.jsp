@@ -85,7 +85,7 @@
                         <td colspan="2">
                             <c:if test="${isNull==true}"> <h6 style="color: red"> <fmt:message key="error.null"/></h6> </c:if>
                             <c:if test="${isValid==true}"> <h6 style="color: red"><fmt:message key="error.quantity"/></h6></c:if>
-                            <input class="form-control form-control-sm" size="1" type="number" min="0" name="addQuantity"  required /></td>
+                            <input class="form-control form-control-sm" size="1" type="number" min="0" max="1000000" name="addQuantity"  required /></td>
                         <td align="center" >
                             <input class="input" type="text"  hidden name="orderAction" value="<c:out value='${invoiceId}'/>!addOrder"/>
                             <button type="submit"  form = "add" class="btn btn-success btn-sm" ><fmt:message key="btn.addProduct"/></button>

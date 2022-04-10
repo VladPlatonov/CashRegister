@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,19 +24,18 @@ public class CreateInvoiceServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String role = String.valueOf(req.getSession().getAttribute("role"));
         Integer id = (Integer) req.getSession().getAttribute("id");
-
-        if (role.equals("ADMIN")|| role.equals("CASHIER") || role.equals("SENIOR_CASHIER")) {
+        if (role.equals("ADMIN") || role.equals("CASHIER") || role.equals("SENIOR_CASHIER")) {
             int page = 1;
             int recordsPerPage = 5;
             int noOfRecords = productService.getNumberOfRows();
             int noOfPages = (int) Math.ceil(noOfRecords * 1.0 / recordsPerPage);
-            if(req.getParameter("page") != null)
+            if (req.getParameter("page") != null)
                 page = Integer.parseInt(req.getParameter("page"));
             User user = userService.findById(id);
             req.setAttribute("noOfPages", noOfPages);
             req.setAttribute("currentPage", page);
             req.setAttribute("user", user);
-            req.setAttribute("products", productService.findProductsUsingLimitAndOffset(page,recordsPerPage));
+            req.setAttribute("products", productService.findProductsUsingLimitAndOffset(page, recordsPerPage));
             req.getRequestDispatcher("WEB-INF/admin/createInvoice.jsp").forward(req, resp);
         } else {
             resp.sendRedirect("/login");
@@ -53,27 +51,29 @@ public class CreateInvoiceServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException, ServletException {
         Integer id = (Integer) req.getSession().getAttribute("id");
-        String [] productCodes = req.getParameterValues("products");
+        String[] productCodes = req.getParameterValues("setQuantity");
         int page = 1;
         int recordsPerPage = 5;
         int noOfRecords = productService.getNumberOfRows();
         int noOfPages = (int) Math.ceil(noOfRecords * 1.0 / recordsPerPage);
-        if(req.getParameter("page") != null)
+        if (req.getParameter("page") != null)
             page = Integer.parseInt(req.getParameter("page"));
-        if(productCodes!=null) {
+        if (productCodes != null) {
             User user = userService.findById(id);
-            Map<String, Double> products = new HashMap<>();
-            Arrays.stream(productCodes).filter(c -> !c.equals("")).forEach(f ->
-                products.put(f, Double.valueOf(req.getParameter("setQuantity" + f))));
-            if(!invoiceService.createInvoice(products, System.currentTimeMillis(), user)) {
+            Map<String, Integer> products = new HashMap<>();
+            for (int i = 0; i < productCodes.length - 1; i += 2)
+                if (Integer.parseInt(productCodes[i + 1]) > 0)
+                    products.put(productCodes[i], Integer.parseInt(productCodes[i + 1]));
+
+            if (products.isEmpty() || !invoiceService.createInvoice(products, System.currentTimeMillis(), user)) {
                 req.setAttribute("isValid", true);
                 req.setAttribute("noOfPages", noOfPages);
                 req.setAttribute("currentPage", page);
-                req.setAttribute("products", productService.findProductsUsingLimitAndOffset(page,recordsPerPage));
-                req.getRequestDispatcher("WEB-INF//admin/createInvoice.jsp").forward(req,resp);
+                req.setAttribute("products", productService.findProductsUsingLimitAndOffset(page, recordsPerPage));
+                req.getRequestDispatcher("WEB-INF/admin/createInvoice.jsp").forward(req, resp);
             }
+            }
+            resp.sendRedirect("/invoices");
         }
-        resp.sendRedirect("/invoices");
     }
-}
 

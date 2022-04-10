@@ -31,7 +31,6 @@ public class EditInvoiceServlet extends HttpServlet {
             User user = userService.findById(id);
             req.setAttribute("user", user);
             if(req.getParameter("id")!=null) {
-
                 Invoice invoice = invoiceService.findById(Integer.parseInt(req.getParameter("id")));
                 int page = 1;
                 int recordsPerPage = 5;
@@ -71,34 +70,28 @@ public class EditInvoiceServlet extends HttpServlet {
             throws IOException {
         String pathRedirect = req.getSession().getAttribute("path").toString();
         String [] orderAction = req.getParameter("orderAction").split("!");
-        if(orderAction[1].equals("deleteOrder"))
-            orderService.deleteOrder(orderAction[0]);
-        if(orderAction[1].equals("updateOrder")) {
-            Order order = orderService.findById(Integer.parseInt(orderAction[0]));
-            Double quantity = Double.valueOf(req.getParameter("setQuantity"));
-            Double checkQuantity = quantity -order.getQuantity();
-            if(quantity==0)
-                orderService.deleteOrder(order.getOrderId().toString());
-            else if(orderService.isValidQuantity(checkQuantity,order.getProductCode()))
-                orderService.updateQuantityOrder(order, quantity);
-            else
-                pathRedirect = pathRedirect+"&isValidSet="+order.getOrderId();
-        }
-        if(orderAction[1].equals("addOrder")){
-            Double quantity =Double.valueOf(req.getParameter("addQuantity"));
-            Order order = new Order();
-            Invoice invoice = invoiceService.findById(Integer.parseInt(orderAction[0]));
-            order.setInvoiceCode(invoice.getInvoiceCode());
-            order.setProductCode(req.getParameter("productCode"));
-            order.setQuantity(Double.valueOf(req.getParameter("addQuantity")));
-            if(quantity==0)
-                pathRedirect = pathRedirect+"&isNull=true";
-            else if(orderService.isValidQuantity(quantity,order.getProductCode())) {
-                order.setOrderValue(orderService.calculateCost(req.getParameter("productCode"), quantity));
-                orderService.create(order);
-            }
-            else
-                pathRedirect = pathRedirect+"&isValid=true";
+        switch (orderAction[1]){
+            case "deleteOrder": orderService.deleteOrder(orderAction[0]); break;
+            case "updateOrder": {
+                Order order = orderService.findById(Integer.parseInt(orderAction[0]));
+                Integer quantity = Integer.parseInt(req.getParameter("setQuantity"));
+                if(quantity==0)
+                    orderService.deleteOrder(order.getOrderId().toString());
+                if(!orderService.updateQuantityOrder(order, quantity))
+                    pathRedirect = pathRedirect+"&isValidSet="+order.getOrderId();
+            }break;
+            case "addOrder":{
+                Integer quantity =Integer.parseInt(req.getParameter("addQuantity"));
+                Order order = new Order();
+                Invoice invoice = invoiceService.findById(Integer.parseInt(orderAction[0]));
+                order.setInvoiceCode(invoice.getInvoiceCode());
+                order.setProductCode(req.getParameter("productCode"));
+                order.setQuantity(quantity);
+                if(quantity==0)
+                    pathRedirect = pathRedirect+"&isNull=true";
+                if(!orderService.create(order))
+                    pathRedirect = pathRedirect+"&isValid=true";
+            }break;
         }
         resp.sendRedirect(pathRedirect);
     }

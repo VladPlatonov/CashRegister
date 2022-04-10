@@ -27,7 +27,7 @@
                     <c:if test="${isValid}">value="${product.cost}" </c:if>>
             <input type="number" class="number" min="0" name="quantity"class="fadeIn second" required placeholder="<fmt:message key="addProduct.quantity"/>"
                    <c:if test="${isValid}">value="${product.quantity}" </c:if>>
-            <input hidden type="text" name="productAction" value="new!addProduct">
+            <input hidden type="text" name="productAction" value="n!new">
             <input type="submit" class="fadeIn fourth" value="<fmt:message key="btn.addProduct"/>">
             <a class="btn btn-danger" role="button" href="/products"><fmt:message key="btn.cancel"/></a>
         </form>

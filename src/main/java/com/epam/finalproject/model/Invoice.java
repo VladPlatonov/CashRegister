@@ -1,13 +1,14 @@
 package com.epam.finalproject.model;
 
-import java.util.Date;
+
+import java.time.LocalDateTime;
 
 public class Invoice {
     private Integer invoiceId;
     private Long invoiceCode;
     private Integer userId;
     private InvoiceStatus status;
-    private Date date;
+    private LocalDateTime date;
     private String invoiceNotes;
 
 
@@ -34,7 +35,7 @@ public class Invoice {
         return status;
     }
 
-    public Date getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
@@ -64,7 +65,7 @@ public class Invoice {
         this.status = status;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 

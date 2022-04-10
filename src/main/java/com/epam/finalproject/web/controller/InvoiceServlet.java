@@ -2,7 +2,6 @@ package com.epam.finalproject.web.controller;
 
 import com.epam.finalproject.context.AppContext;
 import com.epam.finalproject.model.Invoice;
-import com.epam.finalproject.model.InvoiceStatus;
 import com.epam.finalproject.model.User;
 import com.epam.finalproject.service.IInvoiceService;
 import com.epam.finalproject.service.IUserService;
@@ -50,14 +49,11 @@ public class InvoiceServlet extends HttpServlet {
             throws IOException {
         String [] invoiceAction = req.getParameter("invoiceAction").split("!");
         Invoice invoice = invoiceService.findById(Integer.parseInt(invoiceAction[0]));
-        if(invoiceAction[1].equals("finishInvoice")){
-            invoice.setStatus(InvoiceStatus.FINISHED);
-            invoiceService.finishInvoice(invoice);
+        switch (invoiceAction[1]){
+            case "finishInvoice": invoiceService.finishInvoice(invoice); break;
+            case "cancelInvoice": invoiceService.cancelInvoice(invoice); break;
+            case "deleteInvoice": invoiceService.deleteInvoice(invoice); break;
         }
-        if(invoiceAction[1].equals("cancelInvoice"))
-            invoiceService.cancelInvoice(invoice);
-        if(invoiceAction[1].equals("deleteInvoice"))
-            invoiceService.deleteInvoice(invoice);
         resp.sendRedirect("/invoices");
     }
 }

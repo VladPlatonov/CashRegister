@@ -13,7 +13,7 @@
         <a href="/admin" class="nav-link"><h2><fmt:message key="menu.back"/></h2></a>
         <h2><fmt:message key="admin.products"/></h2>
         <form class="colform" method="post" action="/products">
-            <input hidden type="text" name = "productAction" value="add!addProduct">
+            <input hidden type="text" name = "productAction" value="a!add">
             <div class="btnEdit">
                 <button type="submit" class="btn btn-primary"><fmt:message key="btn.addProduct"/></button>
             </div>

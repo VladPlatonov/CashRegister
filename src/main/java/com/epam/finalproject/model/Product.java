@@ -6,8 +6,8 @@ public class Product {
     private String code;
     private String name;
     private String description;
-    private Double cost;
-    private Double quantity;
+    private Integer cost;
+    private Integer quantity;
 
     public Integer getId() {
         return id;
@@ -44,19 +44,19 @@ public class Product {
         this.description = description;
     }
 
-    public Double getCost() {
+    public Integer getCost() {
         return cost;
     }
 
-    public void setCost(Double cost) {
+    public void setCost(Integer cost) {
         this.cost = cost;
     }
 
-    public Double getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Double quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
